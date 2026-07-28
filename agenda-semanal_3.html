@@ -1,0 +1,795 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pauta da Semana</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600;700&family=Space+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#14171C;
+    --ink-2:#1E2229;
+    --paper:#F5F3EC;
+    --paper-dim:#C9C6BA;
+    --stamp:#C23B22;
+    --mustard:#D9A404;
+    --teal:#4C7A7D;
+    --line: rgba(245,243,236,0.14);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--paper);
+    font-family:'Source Serif 4', serif;
+    min-height:100vh;
+    padding:32px 20px 60px;
+  }
+  .masthead{
+    max-width:960px;
+    margin:0 auto 20px;
+    border-bottom:3px double var(--paper-dim);
+    padding-bottom:16px;
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .masthead h1{
+    font-family:'Oswald', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.04em;
+    font-size:clamp(28px,4vw,44px);
+    font-weight:700;
+    margin:0;
+  }
+  .masthead .edition{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--paper-dim);
+    letter-spacing:0.08em;
+    text-transform:uppercase;
+  }
+
+  .wrap{ max-width:960px; margin:0 auto; }
+
+  /* Tabs — styled like press credential tabs */
+  .tabs{
+    display:flex;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-bottom:0;
+    position:relative;
+    z-index:1;
+  }
+  .tab-btn{
+    font-family:'Space Mono', monospace;
+    font-size:11.5px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    background:var(--ink);
+    color:var(--paper-dim);
+    border:1px solid var(--line);
+    border-bottom:none;
+    padding:9px 14px;
+    cursor:pointer;
+    border-radius:3px 3px 0 0;
+    transition:color 0.15s, background 0.15s;
+  }
+  .tab-btn .n{
+    opacity:0.6;
+    margin-left:5px;
+  }
+  .tab-btn:hover{ color:var(--paper); }
+  .tab-btn.active{
+    background:var(--ink-2);
+    color:var(--paper);
+    border-color:var(--line);
+  }
+  .tab-btn.active::after{
+    content:"";
+  }
+
+  .panel{
+    background:var(--ink-2);
+    border:1px solid var(--line);
+    border-radius:0 2px 2px 2px;
+    padding:22px 22px 26px;
+    display:none;
+  }
+  .panel.active{ display:block; }
+
+  .panel h2{
+    font-family:'Oswald', sans-serif;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    font-size:17px;
+    font-weight:600;
+    margin:0 0 18px;
+    display:flex;
+    align-items:center;
+    gap:10px;
+  }
+  .panel h2::after{
+    content:"";
+    flex:1;
+    height:1px;
+    background:var(--line);
+  }
+  .stamp-tag{
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    letter-spacing:0.06em;
+    color:var(--stamp);
+    border:1px solid var(--stamp);
+    padding:2px 6px;
+    border-radius:2px;
+    text-transform:uppercase;
+  }
+
+  /* Calendar */
+  .week{ display:flex; flex-direction:column; gap:2px; }
+  .day{
+    display:grid;
+    grid-template-columns:86px 1fr;
+    border-bottom:1px solid var(--line);
+    padding:10px 0;
+    gap:12px;
+  }
+  .day:last-child{border-bottom:none;}
+  .day-label{
+    font-family:'Oswald', sans-serif;
+    font-size:13px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--paper-dim);
+    padding-top:2px;
+  }
+  .day-label small{
+    display:block;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--paper-dim);
+    opacity:0.7;
+    letter-spacing:0;
+    margin-top:2px;
+  }
+  .events{ display:flex; flex-direction:column; gap:6px; }
+  .event{
+    display:flex;
+    align-items:baseline;
+    gap:8px;
+    padding:3px 6px 3px 10px;
+    margin-left:-6px;
+    border-left:3px solid var(--client-color, var(--teal));
+    flex-wrap:wrap;
+    cursor:pointer;
+    border-radius:2px;
+    transition:background 0.12s;
+  }
+  .event:hover{
+    background:rgba(245,243,236,0.06);
+  }
+  .event .time{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--paper);
+    opacity:0.85;
+    white-space:nowrap;
+  }
+  .event .desc{ font-size:14.5px; line-height:1.35; }
+  .event .client{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:var(--client-color, var(--teal));
+    font-weight:700;
+  }
+  .event .sep{
+    color:var(--paper-dim);
+    opacity:0.5;
+    font-size:12px;
+  }
+  .empty-day, .empty-state{
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+    color:var(--paper-dim);
+    opacity:0.5;
+    font-style:italic;
+  }
+
+  /* Task list (shared by "Lista completa" and each status tab) */
+  .task-list{ display:flex; flex-direction:column; gap:10px; }
+  .task-row{
+    background:var(--paper);
+    color:var(--ink);
+    border-radius:1px;
+    padding:11px 13px 12px;
+    border-left:4px solid var(--client-color, var(--teal));
+    box-shadow:0 1px 0 rgba(0,0,0,0.25);
+  }
+  .task-row .top-line{
+    display:flex;
+    justify-content:space-between;
+    align-items:baseline;
+    gap:10px;
+    flex-wrap:wrap;
+  }
+  .task-row .client{
+    font-family:'Space Mono', monospace;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--client-color, var(--teal));
+  }
+  .task-row .status-pill{
+    font-family:'Space Mono', monospace;
+    font-size:9.5px;
+    text-transform:uppercase;
+    letter-spacing:0.05em;
+    color:#5a564a;
+    border:1px solid #5a564a;
+    border-radius:2px;
+    padding:1px 6px;
+  }
+  .task-row .desc{
+    font-size:14.5px;
+    margin-top:5px;
+    line-height:1.35;
+  }
+  .task-row .meta-line{
+    display:flex;
+    gap:14px;
+    margin-top:7px;
+    font-family:'Space Mono', monospace;
+    font-size:10.5px;
+    color:#5a564a;
+    flex-wrap:wrap;
+  }
+  .task-row .notes{
+    margin-top:6px;
+    font-family:'Source Serif 4', serif;
+    font-size:12.5px;
+    color:#4a463c;
+    font-style:italic;
+    border-top:1px dashed #cfcabb;
+    padding-top:6px;
+  }
+
+  /* Modal de detalhe do item (clique no evento do Resumo) */
+  .modal-overlay{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,0.55);
+    display:none;
+    align-items:center;
+    justify-content:center;
+    padding:20px;
+    z-index:50;
+  }
+  .modal-overlay.open{ display:flex; }
+  .modal-card{
+    background:var(--paper);
+    color:var(--ink);
+    max-width:420px;
+    width:100%;
+    border-radius:2px;
+    padding:20px 22px 22px;
+    border-left:5px solid var(--modal-color, var(--teal));
+    position:relative;
+  }
+  .modal-card .m-client{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    text-transform:uppercase;
+    letter-spacing:0.06em;
+    color:var(--modal-color, var(--teal));
+    font-weight:700;
+  }
+  .modal-card .m-when{
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:#5a564a;
+    margin-top:2px;
+  }
+  .modal-card .m-desc{
+    font-family:'Oswald', sans-serif;
+    font-size:18px;
+    font-weight:600;
+    margin-top:10px;
+    line-height:1.3;
+  }
+  .modal-card .m-notes{
+    font-family:'Source Serif 4', serif;
+    font-size:13.5px;
+    color:#4a463c;
+    margin-top:10px;
+    line-height:1.4;
+    border-top:1px dashed #cfcabb;
+    padding-top:10px;
+  }
+  .modal-card .m-link{
+    display:block;
+    margin-top:12px;
+    font-family:'Space Mono', monospace;
+    font-size:12px;
+  }
+  .modal-card .m-link a{ color:var(--modal-color, var(--teal)); }
+  .modal-card .m-link.empty{ color:#a39d8c; font-style:italic; }
+  .modal-close{
+    position:absolute;
+    top:10px; right:12px;
+    background:none;
+    border:none;
+    font-size:18px;
+    color:#8a8574;
+    cursor:pointer;
+    line-height:1;
+  }
+
+  footer{
+    max-width:960px;
+    margin:24px auto 0;
+    font-family:'Space Mono', monospace;
+    font-size:11px;
+    color:var(--paper-dim);
+    opacity:0.5;
+    text-align:center;
+  }
+</style>
+</head>
+<body>
+
+  <div class="masthead">
+    <h1>Pauta da Semana</h1>
+    <div class="edition" id="last-updated"></div>
+  </div>
+
+  <div class="wrap">
+    <div class="tabs" id="tabs"></div>
+    <div id="panels"></div>
+  </div>
+
+  <footer>Edite os arrays WEEK e TASKS no código para atualizar — depois publique no GitHub Pages.</footer>
+
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal-card" id="modal-card">
+      <button class="modal-close" id="modal-close">✕</button>
+      <div class="m-client" id="modal-client"></div>
+      <div class="m-when" id="modal-when"></div>
+      <div class="m-desc" id="modal-desc"></div>
+      <div class="m-notes" id="modal-notes"></div>
+      <div class="m-link" id="modal-link"></div>
+    </div>
+  </div>
+
+<script>
+/* ============================================================
+   DADOS — edite aqui para atualizar a pauta. Depois de editar,
+   faça commit/push para o GitHub Pages para refletir no Notion.
+   ============================================================ */
+
+const CLIENT_COLORS = {
+  "iFood":                "#C23B22",
+  "DGBB":                 "#C766A0",
+  "Tagarela":             "#9AA0A6",
+  "ABMES":                "#8E6BB0",
+  "Sinepe":               "#4C9A6A",
+  "Fenep":                "#C97A3D",
+  "Escola de Gente":      "#8B5E3C",
+  "Eu S/A":               "#D9A404",
+  "Stella":               "#4C7A7D",
+  "Fábrica de Retratos":  "#5B7FBB",
+  "Agenda que Funciona":  "#6E8B3D",
+  "Família":              "#9C6B4E"
+};
+
+// Última atualização exibida no topo. Atualize esta linha junto com WEEK/TASKS
+// sempre que os dados forem alterados.
+const LAST_UPDATED = "27/07/2026 · 23:00";
+
+// Resumo semanal (aba "Resumo")
+const WEEK = [
+  {
+    day: "Segunda", date: "27/07",
+    events: [
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "11h",   client: "iFood", desc: "Overview com agências" },
+      { time: "11h45", client: "iFood", desc: "Reunião de Guerrilha" },
+      { time: "13h",   client: "Eu S/A", desc: "Revisão Botox" },
+      { time: "15h",   client: "iFood", desc: "Reunião com Jeffrey + DGBB" }
+    ]
+  },
+  {
+    day: "Terça", date: "28/07",
+    events: [
+      { time: "10h",   client: "Sinepe", desc: "Reunião de Comunicação", notes: "Pauta: logística do Seminário Gestores; Missão educacional internacional." },
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "11h",   client: "Escola de Gente", desc: "Reunião sobre atualização do site" },
+      { time: "",      client: "Escola de Gente", desc: "Vem Cá — enviar agenda para arte" },
+      { time: "14h",   client: "Tagarela", desc: "Reunião de Comunicação com Luana" },
+      { time: "15h30", client: "Escola de Gente", desc: "Reunião com Regina" },
+      { time: "",      client: "Fábrica de Retratos", desc: "Feira T-6", notes: "Ocorre toda terça. R$100 por participação + R$80 de taxa anual. Decisão de entrar depende da chegada dos insumos (prazo 12/08)." },
+      { time: "19h30", client: "Eu S/A", desc: "Reunião Comunidade" }
+    ]
+  },
+  {
+    day: "Quarta", date: "29/07",
+    events: [
+      { time: "10h",   client: "DGBB", desc: "Reunião de contrato" },
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "",      client: "Escola de Gente", desc: "Vem Cá — enviar artes para revisão" },
+      { time: "",      client: "Família", desc: "Ir ao consulado", notes: "Janela 13h30–17h30, horário exato ainda não definido." }
+    ]
+  },
+  {
+    day: "Quinta", date: "30/07",
+    events: [
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "",      client: "Escola de Gente", desc: "Vem Cá — audiodescrição e vídeos" },
+      { time: "19h",   client: "Eu S/A", desc: "Clube do Livro" }
+    ]
+  },
+  {
+    day: "Sexta", date: "31/07",
+    events: [
+      { time: "9h",    client: "iFood", desc: "Overview com agências" },
+      { time: "9h30",  client: "Fenep", desc: "Reunião quinzenal" },
+      { time: "9h45",  client: "iFood", desc: "Reunião de Guerrilha" },
+      { time: "10h",   client: "iFood", desc: "Treinamento Agentes Toquan" },
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "",      client: "Escola de Gente", desc: "Vem Cá — publicar" },
+      { time: "19h",   client: "Eu S/A", desc: "Luau da Liberdade" }
+    ]
+  },
+  {
+    day: "Sábado", date: "01/08",
+    events: [
+      { time: "", client: "Fábrica de Retratos", desc: "Saber se tem vaga na Feira da Liberdade" }
+    ]
+  },
+  {
+    day: "Domingo", date: "02/08",
+    events: [
+      { time: "", client: "Stella", desc: "Chegada (horário a definir)" }
+    ]
+  }
+];
+
+// Prévia da semana seguinte (aba "Resumo") — com base nos padrões recorrentes
+// já conhecidos + tarefas já datadas para 03/08 a 09/08.
+const NEXT_WEEK = [
+  {
+    day: "Segunda", date: "03/08",
+    events: [
+      { time: "7h30",  client: "Eu S/A", desc: "Academia" },
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "11h",   client: "iFood", desc: "Overview com agências" },
+      { time: "11h45", client: "iFood", desc: "Reunião de Guerrilha" }
+    ]
+  },
+  {
+    day: "Terça", date: "04/08",
+    events: [
+      { time: "7h30",  client: "Eu S/A", desc: "Academia" },
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "",      client: "Escola de Gente", desc: "Vem Cá — enviar agenda para arte" },
+      { time: "",      client: "ABMES", desc: "Clipping Fórum" }
+    ]
+  },
+  {
+    day: "Quarta", date: "05/08",
+    events: [
+      { time: "7h30",  client: "Eu S/A", desc: "Academia" },
+      { time: "9h às 18h", client: "Sinepe", desc: "Seminário Gestores" },
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "",      client: "Escola de Gente", desc: "Vem Cá — enviar artes para revisão" }
+    ]
+  },
+  {
+    day: "Quinta", date: "06/08",
+    events: [
+      { time: "7h30",  client: "Eu S/A", desc: "Academia" },
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "",      client: "Escola de Gente", desc: "Vem Cá — audiodescrição e vídeos" },
+      { time: "",      client: "ABMES", desc: "Clipping Fórum" }
+    ]
+  },
+  {
+    day: "Sexta", date: "07/08",
+    events: [
+      { time: "7h30",  client: "Eu S/A", desc: "Academia" },
+      { time: "9h",    client: "iFood", desc: "Overview com agências" },
+      { time: "9h45",  client: "iFood", desc: "Reunião de Guerrilha" },
+      { time: "10h30", client: "iFood", desc: "Alinhamento com Jeffrey" },
+      { time: "",      client: "Escola de Gente", desc: "Vem Cá — publicar" },
+      { time: "",      client: "Escola de Gente", desc: "Relatório de redes sociais" }
+    ]
+  },
+  {
+    day: "Sábado", date: "08/08",
+    events: [
+      { time: "", client: "Stella", desc: "Levar para vacinar" },
+      { time: "", client: "Fábrica de Retratos", desc: "Feira no Jaó — pensar na produção" }
+    ]
+  },
+  {
+    day: "Domingo", date: "09/08",
+    events: []
+  }
+];
+
+// Todas as tarefas — usadas na aba "Lista completa" e nas abas de status.
+// Campos: client, desc, status, deadline, notes
+const TASKS = [
+  // iFood — ocorrências desta semana
+  { client: "iFood", desc: "Reunião de Guerrilha", status: "A fazer", deadline: "27/07 · 11h45", notes: "" },
+  { client: "iFood", desc: "Reunião de Guerrilha", status: "A fazer", deadline: "31/07 · 9h45", notes: "" },
+  { client: "iFood", desc: "Treinamento Agentes Toquan", status: "A fazer", deadline: "31/07 · 10h", notes: "" },
+
+  // Fenep
+  { client: "Fenep", desc: "Reunião quinzenal", status: "A fazer", deadline: "31/07 · 9h30", notes: "" },
+  { client: "Fenep", desc: "Live Fenep — Reforma Tributária", status: "A fazer", deadline: "10/08 · 19h30", notes: "" },
+  { client: "Fenep", desc: "Live Fenep — ADPF", status: "A fazer", deadline: "17/08 · 18h", notes: "" },
+  { client: "Fenep", desc: "Live Fenep — Ensino médio", status: "A fazer", deadline: "24/08 · 19h30", notes: "" },
+  { client: "Fenep", desc: "Live Fenep — Internacionalização", status: "A fazer", deadline: "31/08 · 19h", notes: "" },
+  { client: "Fenep", desc: "Publicar artigo do Educador21 no site", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fenep", desc: "Entregar relatório semestral", status: "A fazer", deadline: "dia 10", notes: "Conferir antes na reunião de sexta." },
+
+  // Escola de Gente — Agenda Vem Cá distribuída dia a dia
+  { client: "Escola de Gente", desc: "Reunião sobre atualização do site", status: "A fazer", deadline: "28/07 · 11h", notes: "" },
+  { client: "Escola de Gente", desc: "Reunião com Regina", status: "A fazer", deadline: "28/07 · 15h30", notes: "" },
+
+  { client: "Escola de Gente", desc: "Vem Cá — enviar agenda para arte", status: "A fazer", deadline: "28/07", notes: "" },
+  { client: "Escola de Gente", desc: "Vem Cá — enviar artes para revisão", status: "A fazer", deadline: "29/07", notes: "" },
+  { client: "Escola de Gente", desc: "Vem Cá — fazer audiodescrição e vídeos", status: "A fazer", deadline: "30/07", notes: "" },
+  { client: "Escola de Gente", desc: "Vem Cá — publicar", status: "A fazer", deadline: "31/07", notes: "" },
+  { client: "Escola de Gente", desc: "Conferir publicações da semana", status: "A fazer", deadline: "28/07", notes: "" },
+  { client: "Escola de Gente", desc: "Montar o clipping de 2026", status: "A fazer", deadline: "", notes: "" },
+  { client: "Escola de Gente", desc: "Relatório de redes sociais", status: "A fazer", deadline: "07/08", notes: "Primeira sexta do mês." },
+  { client: "Escola de Gente", desc: "CIEP Charles Chaplin — Oficina e apresentação de Os Inclusos e os Sisos", status: "A fazer", deadline: "26/08", notes: "9h – Oficina de Teatro Acessível. 14h – Apresentação de Os Inclusos e os Sisos." },
+  { client: "Escola de Gente", desc: "Escola Municipal Campos Elíseos — Oficina e apresentação de Os Inclusos e os Sisos", status: "A fazer", deadline: "31/08", notes: "10h30 – Oficina de Teatro Acessível. 13h – Apresentação de Os Inclusos e os Sisos." },
+  { client: "Escola de Gente", desc: "Escola Municipal Pastor Gerson Ferreira Costa — Apresentação de Os Inclusos e os Sisos", status: "A fazer", deadline: "09/09", notes: "15h." },
+  { client: "Escola de Gente", desc: "Colégio Estadual Zuleika Raposo Valladares — Oficina e apresentação de Os Inclusos e os Sisos", status: "A fazer", deadline: "15/09", notes: "9h – Oficina de Teatro Acessível. 13h – Apresentação de Os Inclusos e os Sisos." },
+  { client: "Escola de Gente", desc: "CIEP Ayrton Senna — Oficina e apresentação de Os Inclusos e os Sisos", status: "A fazer", deadline: "17/09", notes: "Horários em definição." },
+
+  // ABMES / Fórum — clipping separado dia a dia
+  { client: "ABMES", desc: "Clipping Fórum", status: "A fazer", deadline: "28/07", notes: "" },
+  { client: "ABMES", desc: "Clipping Fórum", status: "A fazer", deadline: "30/07", notes: "" },
+  { client: "ABMES", desc: "IASE — pediram material?", status: "Concluído", deadline: "", notes: "Resposta: não vão precisar de material." },
+
+  // Sinepe/DF
+  { client: "Sinepe", desc: "Reunião de Comunicação", status: "A fazer", deadline: "28/07 · 10h", notes: "Pauta: logística do Seminário Gestores; Missão educacional internacional." },
+  { client: "Sinepe", desc: "Seminário Gestores", status: "A fazer", deadline: "05/08 · 9h às 18h", notes: "" },
+
+  // Fábrica de Retratos
+  { client: "Fábrica de Retratos", desc: "Feira T-6", status: "A fazer", deadline: "toda terça", notes: "R$100 por participação + R$80 de taxa anual. Decisão de entrar depende da chegada dos insumos (prazo 12/08). Falta pagar os adesivos da feira." },
+  { client: "Fábrica de Retratos", desc: "Saber se tem vaga na Feira da Liberdade", status: "A fazer", deadline: "01/08", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Feira de 08/08 no Jaó", status: "A fazer", deadline: "08/08", notes: "Pensar na produção." },
+  { client: "Fábrica de Retratos", desc: "Relatório sobre a Feira Criativa", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Orçamento da placa de MDF", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Pesquisar Nuvemshop e semelhantes", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Botons de identificação p/ equipe do espaço da Rayne", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Fotoimã p/ mãe da Nadja + Nadja + Sarinha", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Fotoimã p/ mãe e irmãos da Dé", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Orçamento moleskine + itens da Zilda", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Pensar no orçamento para casamento", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Fotoimã Serena — perguntar se quer mais", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Botton Rafael — esperando imagem", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Organizar pastas de imagem por tema no Canva e Drive", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Reajustar altura da estante", status: "A fazer", deadline: "", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Festival de Cinema de Senador Canedo — descobrir o nome dela", status: "A fazer", deadline: "fim de setembro", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Casamento do irmão em Brasília — descobrir o nome da potencial cliente", status: "Someday", deadline: "março/2027", notes: "" },
+  { client: "Fábrica de Retratos", desc: "Atualizar pesquisa de preços e compras", status: "A fazer", deadline: "", notes: "Matriz 25mm: R$87 (AliExpress). Insumos: 115,00 (metal, 58mm) · 44mm R$108,80 · coroa R$133,53 (R$150 em insumo) · total 196 em insumo. Decisão: comprar matriz 25mm + insumo 58mm. A comprar: manta ímã 0,08 (1m) R$45,73; fita acetinada 20mm/25m R$17; mesa balcão R$100." },
+
+  // Eu S/A (pessoal)
+  { client: "Eu S/A", desc: "Reunião Comunidade", status: "A fazer", deadline: "28/07 · 19h30", notes: "" },
+  { client: "Eu S/A", desc: "Clube do Livro", status: "A fazer", deadline: "30/07 · 19h", notes: "" },
+  { client: "Eu S/A", desc: "Revisão Botox", status: "Concluído", deadline: "27/07 · 13h", notes: "" },
+  { client: "Eu S/A", desc: "Luau da Liberdade", status: "A fazer", deadline: "31/07 · 19h", notes: "" },
+  { client: "Eu S/A", desc: "Atualizar controle financeiro", status: "A fazer", deadline: "", notes: "Elétrica do papai: 4x R$64,10, de agosto a novembro. Pagar R$30 para Eleidimar em agosto (tecidos). Orçar óculos." },
+  { client: "Eu S/A", desc: "Academia", status: "A fazer", deadline: "03/08 · 7h30", notes: "Repete de segunda a sexta a partir desta data." },
+  { client: "Eu S/A", desc: "Academia", status: "A fazer", deadline: "04/08 · 7h30", notes: "" },
+  { client: "Eu S/A", desc: "Academia", status: "A fazer", deadline: "05/08 · 7h30", notes: "" },
+  { client: "Eu S/A", desc: "Academia", status: "A fazer", deadline: "06/08 · 7h30", notes: "" },
+  { client: "Eu S/A", desc: "Academia", status: "A fazer", deadline: "07/08 · 7h30", notes: "" },
+  { client: "Eu S/A", desc: "Contato: psicóloga Renata Helou (@renata.helou)", status: "Someday", deadline: "", notes: "" },
+
+  // Família
+  { client: "Família", desc: "Ir ao consulado", status: "A fazer", deadline: "29/07", notes: "Janela 13h30–17h30, horário exato ainda não definido." },
+
+  // Stella
+  { client: "Stella", desc: "Chegada", status: "A fazer", deadline: "02/08", notes: "Horário a definir." },
+  { client: "Stella", desc: "Levar para vacinar", status: "A fazer", deadline: "08/08", notes: "" }
+];
+
+// Boletim FENEP — gerado automaticamente todo mês (última sexta do mês = entrega)
+function pad(n){ return String(n).padStart(2,"0"); }
+function fmtDate(d){ return pad(d.getDate()) + "/" + pad(d.getMonth()+1); }
+function lastFridayOfMonth(year, month0){
+  const d = new Date(year, month0 + 1, 0); // último dia do mês
+  const diff = (d.getDay() - 5 + 7) % 7;
+  d.setDate(d.getDate() - diff);
+  return d;
+}
+function generateBoletimTasks(){
+  const tasks = [];
+  const base = new Date(2026, 6, 1); // julho/2026 = Boletim #6
+  for (let i = 0; i < 3; i++){
+    const year = base.getFullYear();
+    const month0 = base.getMonth() + i;
+    const entrega = lastFridayOfMonth(year, month0);
+    const aprovacao = new Date(entrega); aprovacao.setDate(entrega.getDate() - 4);
+    const envio = new Date(entrega); envio.setDate(entrega.getDate() - 2);
+    const prePauta = new Date(aprovacao); prePauta.setDate(aprovacao.getDate() - 4);
+    const num = 6 + i;
+    tasks.push(
+      { client: "Fenep", desc: `Boletim #${num} — pré-pauta`, status: "A fazer", deadline: fmtDate(prePauta), notes: "" },
+      { client: "Fenep", desc: `Boletim #${num} — aprovação`, status: "A fazer", deadline: fmtDate(aprovacao), notes: "" },
+      { client: "Fenep", desc: `Boletim #${num} — envio dos textos + diagramação`, status: "A fazer", deadline: fmtDate(envio), notes: "" },
+      { client: "Fenep", desc: `Boletim #${num} — entrega`, status: "A fazer", deadline: fmtDate(entrega) + " (manhã)", notes: "" }
+    );
+  }
+  return tasks;
+}
+const ALL_TASKS = TASKS.concat(generateBoletimTasks());
+
+const STATUS_ORDER = ["A fazer", "Em andamento", "Aguardando", "Someday", "Concluído"];
+
+/* ============================================================
+   ABAS
+   ============================================================ */
+
+const TABS = [
+  { id: "resumo", label: "Resumo" },
+  { id: "lista",  label: "Lista completa" },
+  ...STATUS_ORDER.map(s => ({ id: "status-" + s.replace(/\s|\//g,"-"), label: s, status: s }))
+];
+
+function colorFor(client){
+  return CLIENT_COLORS[client] || "#4C7A7D";
+}
+
+function renderWeekBlock(days, sourceKey){
+  return `
+    <div class="week">
+      ${days.map((d, di) => `
+        <div class="day">
+          <div class="day-label">${d.day}<small>${d.date}</small></div>
+          <div class="events">
+            ${
+              d.events.length
+                ? d.events.map((ev, ei) => `
+                  <div class="event" style="--client-color:${colorFor(ev.client)}" data-src="${sourceKey}" data-day="${di}" data-ev="${ei}">
+                    ${ev.time ? `<span class="time">${ev.time}</span><span class="sep">–</span>` : ""}
+                    <span class="client">${ev.client}</span><span class="sep">–</span>
+                    <span class="desc">${ev.desc}</span>
+                  </div>
+                `).join("")
+                : `<div class="empty-day">Nada marcado</div>`
+            }
+          </div>
+        </div>
+      `).join("")}
+    </div>
+  `;
+}
+
+function renderWeekPanel(){
+  return `
+    <h2>Compromissos &amp; Deadlines <span class="stamp-tag">Semana</span></h2>
+    ${renderWeekBlock(WEEK, "WEEK")}
+    <h2 style="margin-top:22px;">Semana Seguinte <span class="stamp-tag">Prévia</span></h2>
+    ${renderWeekBlock(NEXT_WEEK, "NEXT_WEEK")}
+  `;
+}
+
+function renderTaskRow(t){
+  return `
+    <div class="task-row" style="--client-color:${colorFor(t.client)}">
+      <div class="top-line">
+        <span class="client">${t.client}</span>
+        <span class="status-pill">${t.status}</span>
+      </div>
+      <div class="desc">${t.desc}</div>
+      <div class="meta-line">
+        <span>Prazo: ${t.deadline || "—"}</span>
+      </div>
+      ${t.notes ? `<div class="notes">${t.notes}</div>` : ""}
+    </div>
+  `;
+}
+
+function renderListPanel(items, emptyLabel, title){
+  return `
+    <h2>${title}</h2>
+    <div class="task-list">
+      ${
+        items.length
+          ? items.map(renderTaskRow).join("")
+          : `<div class="empty-state">${emptyLabel}</div>`
+      }
+    </div>
+  `;
+}
+
+function renderAll(){
+  const tabsEl = document.getElementById("tabs");
+  const panelsEl = document.getElementById("panels");
+
+  tabsEl.innerHTML = TABS.map((t, i) => {
+    const count = t.status ? ALL_TASKS.filter(x => x.status === t.status).length : null;
+    return `<button class="tab-btn${i===0?' active':''}" data-tab="${t.id}">${t.label}${count!==null ? `<span class="n">${count}</span>` : ""}</button>`;
+  }).join("");
+
+  panelsEl.innerHTML = TABS.map((t, i) => {
+    let inner;
+    if (t.id === "resumo") inner = renderWeekPanel();
+    else if (t.id === "lista") inner = renderListPanel(ALL_TASKS, "Nenhuma tarefa cadastrada", "Lista completa de tarefas");
+    else inner = renderListPanel(ALL_TASKS.filter(x => x.status === t.status), "Nenhuma tarefa nesta coluna", t.status);
+    return `<div class="panel${i===0?' active':''}" data-panel="${t.id}"><div class="panel-inner">${inner}</div></div>`;
+  }).join("");
+
+  tabsEl.querySelectorAll(".tab-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      tabsEl.querySelectorAll(".tab-btn").forEach(b => b.classList.remove("active"));
+      panelsEl.querySelectorAll(".panel").forEach(p => p.classList.remove("active"));
+      btn.classList.add("active");
+      panelsEl.querySelector(`[data-panel="${btn.dataset.tab}"]`).classList.add("active");
+    });
+  });
+}
+
+document.getElementById("last-updated").textContent = "Atualizado em " + LAST_UPDATED;
+
+renderAll();
+
+/* ============================================================
+   MODAL — clique num item do Resumo para ver detalhe/observações/link
+   ============================================================ */
+
+function openEventModal(sourceKey, dayIdx, evIdx){
+  const days = sourceKey === "NEXT_WEEK" ? NEXT_WEEK : WEEK;
+  const day = days[dayIdx];
+  const ev = day.events[evIdx];
+  if (!ev) return;
+
+  document.getElementById("modal-card").style.setProperty("--modal-color", colorFor(ev.client));
+  document.getElementById("modal-client").textContent = ev.client;
+  document.getElementById("modal-when").textContent = `${day.day} · ${day.date}${ev.time ? " · " + ev.time : ""}`;
+  document.getElementById("modal-desc").textContent = ev.desc;
+  document.getElementById("modal-notes").textContent = ev.notes || "Sem observações adicionais.";
+
+  const linkEl = document.getElementById("modal-link");
+  if (ev.link){
+    linkEl.className = "m-link";
+    linkEl.innerHTML = `<a href="${ev.link}" target="_blank" rel="noopener">${ev.link}</a>`;
+  } else {
+    linkEl.className = "m-link empty";
+    linkEl.textContent = "Sem link cadastrado ainda.";
+  }
+
+  document.getElementById("modal-overlay").classList.add("open");
+}
+
+function closeEventModal(){
+  document.getElementById("modal-overlay").classList.remove("open");
+}
+
+document.getElementById("panels").addEventListener("click", (e) => {
+  const el = e.target.closest(".event");
+  if (!el) return;
+  openEventModal(el.dataset.src, Number(el.dataset.day), Number(el.dataset.ev));
+});
+
+document.getElementById("modal-close").addEventListener("click", closeEventModal);
+document.getElementById("modal-overlay").addEventListener("click", (e) => {
+  if (e.target.id === "modal-overlay") closeEventModal();
+});
+</script>
+
+</body>
+</html>
